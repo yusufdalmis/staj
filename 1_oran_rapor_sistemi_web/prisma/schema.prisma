@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum ReportStatus {
+  PENDING
+  APPROVED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(USER)
+  unit      String?
+  isActive  Boolean  @default(true)
+  reports      Report[]
+  logs         SystemLog[]
+  workPrograms WorkProgram[]
+  createdAt    DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SystemLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  details   String   @db.Text
+  ip        String?
+  createdAt DateTime @default(now())
+}
+
+model Report {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  unit          String
+  isAnnual      Boolean       @default(false)
+  status        ReportStatus  @default(PENDING)
+  
+  // Weekly activities list
+  activities    WeeklyActivity[]
+
+  // Annual details
+  annualDetails AnnualDetails?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+// --- WORK PROGRAMS ---
+model WorkProgram {
+  id          String   @id @default(cuid())
+  userId      String   // Admin who created it
+  user        User     @relation(fields: [userId], references: [id])
+  name        String
+  year        Int      
+  unit        String?
+  description String?  @db.Text
+  
+  activities           WorkProgramActivity[] 
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WorkProgramActivity {
+  id                   String   @id @default(cuid())
+  workProgramId        String
+  workProgram          WorkProgram @relation(fields: [workProgramId], references: [id], onDelete: Cascade)
+  
+  name                 String
+  relatedGoal          String?
+  responsibleUnit      String?
+  supportUnit          String?
+  stakeholders         String[]
+  type                 String?
+  budgetCode           String?
+  budgets              Json?
+  plannedMonths        Int[]
+  
+  performanceIndicator String?
+  resultIndicator      String?
+  measurementUnit      String?
+  target               String?
+  verificationSource   String?
+  
+}
+
+model WeeklyActivity {
+  id               String   @id @default(cuid())
+  reportId         String
+  report           Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  
+  title            String?
+  projectRefNo     String?
+  programType      String?
+  description      String
+  stakeholders     String[] // PostgreSQL supports string arrays natively
+  status           String?
+  nextStep         String?
+  
+  photo1           String?  @db.Text
+  photo2           String?  @db.Text
+}
+
+model AnnualDetails {
+  id                 String   @id @default(cuid())
+  reportId           String   @unique
+  report             Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  
+  sopName            String
+  sopRefNo           String?
+  reportPeriod       String?
+  budget             Float?
+  sopDuration        String?
+  sopSummary         String?
+  // Component Tracking (Kapsam Takibi)
+  components             ComponentTracking[]
+  
+  // Indicators & Milestones
+  resultIndicators       ResultIndicator[]
+  outputIndicators       OutputIndicator[]
+  milestones             Milestone[]
+  
+  // Extra Tables for specific SOPs (Yerel Kalkınma Fırsatları / Kurumsal Gelişim)
+  evaluations            Evaluation[]
+  improvementSuggestions ImprovementSuggestion[]
+}
+
+model ComponentTracking {
+  id                 String   @id @default(cuid())
+  annualDetailsId    String
+  annualDetails      AnnualDetails @relation(fields: [annualDetailsId], references: [id], onDelete: Cascade)
+  
+  name               String
+  componentName      String?
+  status             String?
+  delayReason        String?
+  progress           String?
+  nextPeriodPlan     String?
+}
+
+model ResultIndicator {
+  id                 String   @id @default(cuid())
+  annualDetailsId    String
+  annualDetails      AnnualDetails @relation(fields: [annualDetailsId], references: [id], onDelete: Cascade)
+  
+  name               String
+  unit               String?
+  initialValue       String?
+  target             String?
+  periodValue        String?
+  relatedGoal        String?
+  targetPeriod       String?
+}
+
+model OutputIndicator {
+  id                 String   @id @default(cuid())
+  annualDetailsId    String
+  annualDetails      AnnualDetails @relation(fields: [annualDetailsId], references: [id], onDelete: Cascade)
+  
+  name               String
+  componentCode      String?
+  unit               String?
+  target             String?
+  periodValue        String?
+  targetPeriod       String?
+}
+
+model Milestone {
+  id                 String   @id @default(cuid())
+  annualDetailsId    String
+  annualDetails      AnnualDetails @relation(fields: [annualDetailsId], references: [id], onDelete: Cascade)
+  
+  name               String
+  componentCode      String?
+  plannedDate        String?
+  actualDate         String?
+}
+
+model Evaluation {
+  id                 String   @id @default(cuid())
+  annualDetailsId    String
+  annualDetails      AnnualDetails @relation(fields: [annualDetailsId], references: [id], onDelete: Cascade)
+  
+  section            String
+  description        String
+}
+
+model ImprovementSuggestion {
+  id                 String   @id @default(cuid())
+  annualDetailsId    String
+  annualDetails      AnnualDetails @relation(fields: [annualDetailsId], references: [id], onDelete: Cascade)
+  
+  lessonLearned      String
+  suggestion         String
+  relatedSopArea     String
+}
+
+// Global Financial Data for Weekly Reports
+model FinancialData {
+  id            String   @id @default(cuid())
+  weekNumber    Int
+  year          Int
+  
+  // Bank
+  genelHesap    Float
+  ozelHesap     Float
+  
+  // Ozel Hesap Detay
+  kopSartliBagis Float?
+  sogepHesap     Float?
+  cmdpHesap      Float?
+  uretenSehirler Float?
+  sogreenHesap   Float?
+  abProjeHesap   Float?
+  
+  // Gelir Gider
+  toplamGelir    Float?
+  toplamGider    Float?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([weekNumber, year])
+}
+
+model SystemSetting {
+  key   String @id
+  value String @db.Text // Store JSON stringified array
+}

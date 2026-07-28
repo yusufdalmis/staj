@@ -1,0 +1,37 @@
+# KVKK & Personal Data Files (PDF Bordro, Database & Generated Exports)
+*.pdf
+*.sqlite
+*.sqlite3
+*.db
+*.xlsx
+*.xls
+*.csv
+*.html
+
+# Temporary Data Dumps & Debug Logs
+*_dump*.txt
+debug*.txt
+raw_*.json
+sheet*.json
+excel_data.json
+*.log
+output.txt
+toplu_bordro_raw.txt
+cols.txt
+names.txt
+db_test.txt
+
+# Python Build & Cache Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+/build/
+/dist/
+/*.exe
+/.venv/
+/venv/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store

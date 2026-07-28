@@ -1,0 +1,44 @@
+# KVKK Data Exclusions (PDF Bordros, Databases, Excel & HTML Exports)
+*.pdf
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.xlsx
+*.xls
+*.csv
+*.html
+*_dump*.txt
+debug*.txt
+raw_*.json
+sheet*.json
+excel_data.json
+*.log
+output.txt
+toplu_bordro_raw.txt
+cols.txt
+names.txt
+db_test.txt
+
+# Node.js & Next.js Build & Environment Artifacts
+node_modules/
+.next/
+out/
+.env
+.env*.local
+!.env.example
+
+# Python Build & Cache Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+build/
+dist/
+*.exe
+.venv/
+venv/
+
+# OS & IDE Files
+.DS_Store
+.vscode/
+.idea/
